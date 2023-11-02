@@ -77,7 +77,7 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
     #Initilization of step "previous" step sizes variables
     alpha0 = alpha1 = 1
 
-    p = np.zeros(g1.shape())
+    p = np.zeros(g1.shape)
     beta = 0
     #CG main loop
     #Stop if xk is outside Xmax distance from initial point
@@ -109,11 +109,12 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
         #7
         y = g1 - g0
         #8
-        beta = (sla.norm(g1, 2)**2)/(np.dot(p, y))
+        if(np.dot(p.T, y)!=0):
+            beta = (sla.norm(g1, 2)**2)/(np.dot(p.T, y))
         # 9
         k += 1
 
-        if verbose: print(f'x = {x1}, g = {g1}')
+        if verbose: print(f'x = {x1.T}, g = {g1.T}')
 
 
     return x1, grads, obj_calls
