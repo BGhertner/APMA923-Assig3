@@ -49,6 +49,8 @@ def soft_abs(x, eps=0.0001):
 
 def strong_wolfe_bisection(f, g, xk, pk, gk, mu=0.25, sigma=0.75, alpha = 0., t = 1., beta = np.inf):
     """
+    DOESN'T WORK BUT YOU CAN PLAY WITH IT IF YOU WANT
+
     Args:
         f: function handle of function to be minimized
         g: function handle of gradient of f
