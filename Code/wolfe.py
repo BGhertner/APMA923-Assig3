@@ -48,15 +48,15 @@ def soft_abs(x, eps=0.0001):
     """
     return np.sqrt(x**2 + eps**2)
 
-def strong_wolfe_bisection(f, xk, pk, gk, mu, sigma, gmethod, alpha = 0., t = 1., beta = np.inf):
+def strong_wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha = 0., t = 1., beta = np.inf):
     """
     Args:
-        f: function handle to be minimized
+        f: function handle of function to be minimized
+        g: function handle of gradient of f
         xk: input vector at current step
         pk: chosen descent direction
         gk: gradient of f at xk
         mu: hyperparmeter with 0 < mu < sigma  < 1
-        gmethod: gradient method
         sigma: hyperparameter with 0 < mu < sigma < 1
         alpha: parameter to be used in wolfe, can be left untouched
         t: current proposed stepsize, can be left untouched
