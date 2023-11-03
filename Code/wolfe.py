@@ -4,7 +4,7 @@ Bisection for Wolfe conditions - Nick Huang, November 2023
 
 import jax.numpy as np
 
-def wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha = 0., t = 1., beta = np.inf):
+def wolfe_bisection(f, g, xk, pk, gk, mu=0.25, sigma=0.75, alpha = 0., t = 1., beta = np.inf):
     """
     Args:
         f: function handle of function to be minimized
@@ -13,8 +13,8 @@ def wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha = 0., t = 1., beta = np.i
         pk: chosen descent direction
         gk: gradient of f at xk
         mu: hyperparmeter with 0 < mu < sigma  < 1
-        sigma: hyperparameter with 0 < mu < sigma < 1
-        alpha: parameter to be used in wolfe, can be left untouched
+        sigma: (optional) hyperparameter with 0 < mu < sigma < 1
+        alpha: (optional) parameter to be used in wolfe, can be left untouched
         t: current proposed stepsize, can be left untouched
         beta: parameter to be used in wolfe, can be left untouched.
     Returns: float t, the step length
@@ -48,7 +48,7 @@ def soft_abs(x, eps=0.0001):
     """
     return np.sqrt(x**2 + eps**2)
 
-def strong_wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha = 0., t = 1., beta = np.inf):
+def strong_wolfe_bisection(f, g, xk, pk, gk, mu=0.25, sigma=0.75, alpha = 0., t = 1., beta = np.inf):
     """
     Args:
         f: function handle of function to be minimized
@@ -57,8 +57,8 @@ def strong_wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha = 0., t = 1., beta
         pk: chosen descent direction
         gk: gradient of f at xk
         mu: hyperparmeter with 0 < mu < sigma  < 1
-        sigma: hyperparameter with 0 < mu < sigma < 1
-        alpha: parameter to be used in wolfe, can be left untouched
+        sigma: (optional) hyperparameter with 0 < mu < sigma < 1
+        alpha: (optional) parameter to be used in wolfe, can be left untouched
         t: current proposed stepsize, can be left untouched
         beta: parameter to be used in wolfe, can be left untouched.
     Returns: float, the step length
