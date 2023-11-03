@@ -85,7 +85,7 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
     #Stop if ||grad(xk)|| or ||xk-1 - xk|| < stopping tolerance (eps)
     while (sla.norm(x1 - x.reshape(-1,1), 2) < Xmax \
            and k < kmax \
-           and np.min([sla.norm(g1,2), sla.norm(x0 - x1, 2)]) > eps) \
+           and sla.norm(g1,2) > eps) \
            or k < 2: #Run for at least two iterations.
         
         #Numbered steps following CG Survey
@@ -97,7 +97,7 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
         p = -1*g1 + beta*p
         #3
         alpha0 = alpha1
-        alpha1 = get_step(f, x0, p, g0, alpha0, alpha1)
+        alpha1 = get_step(f, g, x0, p, g0, alpha0, alpha1)
         #4
         s = alpha1*p
         #5

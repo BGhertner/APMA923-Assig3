@@ -4,7 +4,7 @@ Imporved backtracking - Benjamin Ghertner Oct 2023
 
 import numpy as np
 
-def backtracking(f, xk, pk, gk, alpha1, alpha2, mu=1e-4, rho=1/2):
+def backtracking(f, g, xk, pk, gk, alpha1, alpha2, mu=1e-4, rho=1/2):
     """
     Imporved backtracking - Benjamin Ghertner Oct 2023
 
