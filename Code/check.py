@@ -13,5 +13,5 @@ def der_sim(x):
     f2 = -2*(x[0]*x[1]-1.5)*x[0] -2*(x[1]-1.5)
     return np.array([f*f1, f*f2])
 
-optim = CG(np.array([2, 2]), sim, der_sim, wolfe_bisection, kmax=1000, verbose=True)
+optim = CG(np.array([2, 2]), sim, der_sim, wolfe_bisection, kmax=10, verbose=True, option=0)
 #print(optim[0].T)

@@ -6,7 +6,7 @@ import numpy as np
 import scipy.linalg as sla
 
 def CG(x, f=None, g=None, get_step=None, eps=1e-4,
-        Xmax=10, kmax=100, verbose=False, gmethod=0, h=None):
+        Xmax=10, kmax=100, verbose=False, gmethod=0, option=0, h=None):
     
     """
     CG - Piyush Agarwal Oct 2023
@@ -56,6 +56,9 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
 
     h: (optional) the "h" parameter in complex differentiation. If not provided and gmethod = 1 
         then h = eps will be used.
+    
+    option: Scheme for Conjugate Gradient
+    
     Returns:
 
     xk: d X 1 numpy vector - Final x point of the algorithm.
@@ -142,7 +145,11 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
 
         #8
         if(np.dot(p.T, y)!=0):
-            beta = (sla.norm(g1, 2)**2)/(np.dot(p.T, y))
+            if(option == 1):
+                beta = (sla.norm(g1, 2)**2)/(np.dot(p.T, y))
+            else:
+                term1 = y - 2*p*(sla.norm(y, 2)**2/np.dot(p.T, y))
+                beta = np.dot(term1.T, g1)/ np.dot(p.T, y)
         else:
             beta = 0 #restart
 
