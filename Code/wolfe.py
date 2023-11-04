@@ -33,6 +33,7 @@ def wolfe_bisection(f, g, xk, pk, gk, mu=1e-10, sigma=0.7,
     if gmethod == 0: obj_calls += 1
     elif gmethod == 1: obj_calls += d
 
+    obj_calls += 2 #2 calls to evaluate if
     if f(xk + t * pk) > f(xk) + mu * t * np.dot(gk.T, pk):  # Check armijo
         return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha, 
                                t=(alpha+t)/2, beta=t, gmethod=gmethod, obj_calls=obj_calls)  # If yes, reset
