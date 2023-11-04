@@ -6,10 +6,9 @@ import numpy as np
 import scipy.linalg as sla
 
 
-def BFGS(x, f=None, g=None, H=None, hess=None, 
+def BFGS(x, f=None, g=None, H=None, 
          get_step=None, eps=1e-4, Xmax=10, 
-         kmax=100, verbose=False, gmethod=0,
-         Hmethod=0):
+         kmax=100, verbose=False, gmethod=0, h=None):
     """
     BFGS - Benjamin Ghertner Oct 2023
 
@@ -27,11 +26,6 @@ def BFGS(x, f=None, g=None, H=None, hess=None,
     H: (optional) default=None, d X d numpy array, initial approximation for the inverse hessian 
         approximation "H" this matrix needs to be symetric if it is not positive definite then a
         mu will be found so that H + mu I > 0 and the need H = H + mu I will be used instead.
-
-    hess: (optional) default=None, d X d numpy array or function handle, hessian of the function 
-        at the initial point or function which takes a position vector x and outputs the hessian 
-        of the objective function at that point. This function or array will be used to calculate 
-        the initial H vector if the appropiate Hmethod choice is chosen (see Hmethod).
 
     get_step: (required) default=None, function handle which takes the below inputs and
                          returns the step-length for updating x
@@ -63,9 +57,10 @@ def BFGS(x, f=None, g=None, H=None, hess=None,
 
         0 - Use a supplied function for the gradient. g must be provided in this case.
 
-    Hmethod: (optional) default=1, integer - option for intial H calculation,
+        1 - Complex differentiation is used to create an approximation of g.
 
-        0 - Use a supplied initital H. H must be provided in this case.
+    h: (optional) the "h" parameter in complex differentiation. If not provided and gmethod = 1 
+        then h = eps will be used.
 
     Returns:
 
@@ -83,8 +78,29 @@ def BFGS(x, f=None, g=None, H=None, hess=None,
     #Start off x1 and x0 as the initial x point
     x1 = x0 = x.reshape(-1,1) #reshape to column vector if not already
     d = x0.shape[0] #columns of x are number of dimensions
+
+    #if gmethod is not 0 then create a lambda function for g to be used
+    if gmethod == 1: #complex differentiation
+        if h is None:
+            h = eps
+        #Define a complex diff. function
+        def get_g(xk):
+            gk = np.zeros_like(xk)
+            for i in range(xk.size):
+                inp = np.zeros_like(xk).astype('complex128')
+                inp += xk
+                inp[i] += 1j*h
+                gk[i] = (f(inp)/h).imag
+            return gk
+        #Set g to the complex diff function
+        g = get_g
+
     #Start off g1 and g2 as the grad at the initial x point
     g1 = g0 = g(x0).reshape(-1,1)
+
+    #Count function calls
+    if gmethod == 0: obj_calls += 1
+    elif gmethod == 1: obj_calls += d
 
     #ID matrix for convience
     I = np.eye(d,d)
@@ -98,7 +114,7 @@ def BFGS(x, f=None, g=None, H=None, hess=None,
     k = 0
 
     #Initilization of step "previous" step sizes variables
-    alpha0 = alpha1 = 1
+    alpha1 = 1
 
     #BFGS main loop
     #Stop if xk is outside Xmax distance from initial point
@@ -115,25 +131,40 @@ def BFGS(x, f=None, g=None, H=None, hess=None,
         #1
         x0 = x1
         g0 = g1
+
+        #Method "gets stuck" reset H as I
+        if sla.norm(x0 - x1) < 1e-4: H = np.eye(d,d)
+
         #2
         p = -H@g0
+        
         #3
-        alpha0 = alpha1
-        alpha1 = get_step(f, x0, p, g0, alpha0, alpha1)
+        alpha1, f_calls = get_step(f, g, x0, p, g0)
+        obj_calls += f_calls
+
         #4
         s = alpha1*p
+
         #5
         x1 = x0 + s
+
         #6
         g1 = g(x1).reshape(-1,1)
+        if gmethod == 0: obj_calls += 1
+        elif gmethod == 1: obj_calls += d
+
         #save ||gk|| to return history of grad sizes
         grads.append(sla.norm(g1, 2))
+
         #7
         y = g1 - g0
+
         #8
         rho = 1/y.T@s
+
         #9
         H = (I - rho*s@y.T)@H@(I - rho*y@s.T) + rho*s@s.T
+
         #10
         k += 1
 

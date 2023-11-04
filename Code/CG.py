@@ -6,7 +6,7 @@ import numpy as np
 import scipy.linalg as sla
 
 def CG(x, f=None, g=None, get_step=None, eps=1e-4,
-        Xmax=10, kmax=100, verbose=False, gmethod=0):
+        Xmax=10, kmax=100, verbose=False, gmethod=0, h=None):
     
     """
     CG - Piyush Agarwal Oct 2023
@@ -52,6 +52,10 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
 
         0 - Use a supplied function for the gradient. g must be provided in this case.
 
+        1 - Complex differentiation is used to create an approximation of g.
+
+    h: (optional) the "h" parameter in complex differentiation. If not provided and gmethod = 1 
+        then h = eps will be used.
     Returns:
 
     xk: d X 1 numpy vector - Final x point of the algorithm.
@@ -68,14 +72,32 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
     #Start off x1 and x0 as the initial x point
     x1 = x0 = x.reshape(-1,1) #reshape to column vector if not already
     d = x0.shape[0] #columns of x are number of dimensions
+
+    #if gmethod is not 0 then create a lambda function for g to be used
+    if gmethod == 1: #complex differentiation
+        if h is None:
+            h = eps
+        #Define a complex diff. function
+        def get_g(xk):
+            gk = np.zeros_like(xk)
+            for i in range(xk.size):
+                inp = np.zeros_like(xk).astype('complex128')
+                inp += xk
+                inp[i] += 1j*h
+                gk[i] = (f(inp)/h).imag
+            return gk
+        #Set g to the complex diff function
+        g = get_g
+
     #Start off g0 and g1 as the grad at the initial x point
     g1 = g0 = g(x0).reshape(-1,1)
 
+    #Count function calls
+    if gmethod == 0: obj_calls += 1
+    elif gmethod == 1: obj_calls += d
+
     #initialize iteration count (k)
     k = 0
-
-    #Initilization of step "previous" step sizes variables
-    alpha0 = alpha1 = 1
 
     p = np.zeros(g1.shape)
     beta = 0
@@ -93,24 +115,37 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
         #1
         x0 = x1
         g0 = g1
+        
         #2
         p = -1*g1 + beta*p
+
         #3
-        alpha0 = alpha1
-        alpha1 = get_step(f, g, x0, p, g0, alpha0, alpha1)
+        alpha1, f_calls = get_step(f, g, x0, p, g0)
+        obj_calls += f_calls
+
         #4
         s = alpha1*p
+
         #5
         x1 = x0 + s
+
         #6
         g1 = g(x1).reshape(-1,1)
+        if gmethod == 0: obj_calls += 1
+        elif gmethod == 1: obj_calls += d
+
         #save ||gk|| to return history of grad sizes
         grads.append(sla.norm(g1, 2))
+
         #7
         y = g1 - g0
+
         #8
         if(np.dot(p.T, y)!=0):
             beta = (sla.norm(g1, 2)**2)/(np.dot(p.T, y))
+        else:
+            beta = 0 #restart
+
         # 9
         k += 1
 

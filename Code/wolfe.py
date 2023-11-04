@@ -4,7 +4,8 @@ Bisection for Wolfe conditions - Nick Huang, November 2023
 
 import numpy as np
 
-def wolfe_bisection(f, g, xk, pk, gk, mu=1e-10, sigma=0.7, alpha = 0., t = 1., beta = np.inf):
+def wolfe_bisection(f, g, xk, pk, gk, mu=1e-10, sigma=0.7, 
+                    alpha = 0., t = 1., beta = np.inf, gmethod=0, obj_calls=0):
     """
     Args:
         f: function handle of function to be minimized
@@ -17,21 +18,35 @@ def wolfe_bisection(f, g, xk, pk, gk, mu=1e-10, sigma=0.7, alpha = 0., t = 1., b
         alpha: (optional) parameter to be used in wolfe, can be left untouched
         t: current proposed stepsize, can be left untouched
         beta: parameter to be used in wolfe, can be left untouched.
-    Returns: float t, the step length
+        gmethod: Which grad method is used (this only matter for how to count funct. calls)
+        obj_calls: current function calls count
+    Returns: 
+        float t, the step length
+        obj_calls: number of times the objective function was called
 
     """
+    obj_calls = 0
+    xk = xk.reshape(-1,1)
+    d = xk.shape[0]
+
     gxk1 = g(xk + t * pk)  # Create gradient of next vector
+    if gmethod == 0: obj_calls += 1
+    elif gmethod == 1: obj_calls += d
+
     if f(xk + t * pk) > f(xk) + mu * t * np.dot(gk.T, pk):  # Check armijo
-        return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha, t=(alpha+t)/2, beta=t)  # If yes, reset
+        return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha, 
+                               t=(alpha+t)/2, beta=t, gmethod=gmethod, obj_calls=obj_calls)  # If yes, reset
     elif np.dot(gxk1.T, pk) < sigma * np.dot(gk.T, pk):  # Wolfe
         if beta == np.inf:
             # If infinite beta, reset t = 2 * alpha
-            return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha=t, t=2*t, beta=beta)
+            return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha=t, 
+                                   t=2*t, beta=beta, gmethod=gmethod, obj_calls=obj_calls)
         else:
             # Otherwise, reset t = (alpha + beta)/2
-            return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha=t, t=(t + beta)/2, beta=beta)
+            return wolfe_bisection(f, g, xk, pk, gk, mu, sigma, alpha=t, 
+                                   t=(t + beta)/2, beta=beta, gmethod=gmethod, obj_calls=obj_calls)
     else:
-        return t  # We have our step
+        return t, obj_calls  # We have our step
 
 
 def soft_abs(x, eps=0.0001):
