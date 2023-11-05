@@ -5,11 +5,11 @@ Conjugate Gradient - Piyush Agarwal Oct 2023
 import numpy as np
 import scipy.linalg as sla
 
-def CG(x, f=None, g=None, get_step=None, eps=1e-4,
+def AdaM(x, f=None, g=None, get_step=None, eps=1e-4, gamma1=0.9, gamma2=0.999,
         Xmax=10, kmax=100, verbose=False, gmethod=0, h=None):
     
     """
-    CG - Piyush Agarwal Oct 2023
+    AdaM - Piyush Agarwal Oct 2023
 
     Inputs:
 
@@ -40,6 +40,10 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
 
     eps: (optional) default=1e-4, scalar - tolerance for stopping criteria 
         min(||gk||, ||xk - xk-1||) <= eps.
+
+    gamma1: (optional) default=0.9, scalar - rate of exponential decay for 1st moment
+        
+    gamma2: (optional) default=0.999, scalar - rate of exponential decay for 2nd moment
 
     Xmax: (optional) default=10, scalar - maximum distance from the start point for optimization
         search. Algorithm stops if ||xk - x0|| > Xmax
@@ -95,6 +99,8 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
     #Start off g0 and g1 as the grad at the initial x point
     g1 = g0 = g(x0).reshape(-1,1)
 
+    s1 = s0 = np.zeros_like(x0)
+    v1 = v0 = np.zeros_like(x0)
     #Count function calls
     if gmethod == 0: obj_calls += 1
     elif gmethod == 1: obj_calls += d
@@ -102,9 +108,7 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
     #initialize iteration count (k)
     k = 0
 
-    p = np.zeros(g1.shape)
-    beta = 0
-    #CG main loop
+    #AdaM main loop
     #Stop if xk is outside Xmax distance from initial point
     #Stop if number of iterations (k) > max iterations (kmax)
     #Stop if ||grad(xk)|| or ||xk-1 - xk|| < stopping tolerance (eps)
@@ -113,21 +117,25 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
            and sla.norm(g1,2) > eps) \
            or k < 2: #Run for at least two iterations.
         
-        #Numbered steps following CG Survey
+        #Numbered steps following AdaM Algorithm
         
         #1
         x0 = x1
         g0 = g1
-        
-        #2
-        p = -1*g1 + beta*p
+        s0 = s1
+        v0 = v1
 
+        #2
+        s1 = gamma1*s0  + (1-gamma1)*g0
+        v1 = gamma2*v0  + (1-gamma2)*(g0**2)
+        s1 = s1/(1-gamma1**(k+1))
+        v1 = v1/(1-gamma2**(k+1))
+        p = -1*s1/(eps + np.sqrt(v1))
         #3
         alpha1, f_calls = get_step(f, g, x0, p, g0)
         obj_calls += f_calls
         #4
         s = alpha1*p
-
         #5
         x1 = x0 + s
 
@@ -139,17 +147,7 @@ def CG(x, f=None, g=None, get_step=None, eps=1e-4,
         #save ||gk|| to return history of grad sizes
         grads.append(sla.norm(g1, 2))
 
-        #7
-        y = g1 - g0
-
-        #8
-        if(np.dot(p.T, y)!=0): 
-            term1 = y - 2*p*(sla.norm(y, 2)**2/np.dot(p.T, y))
-            beta = np.dot(term1.T, g1)/ np.dot(p.T, y)
-        else:
-            beta = 0 #restart
-
-        # 9
+        # 7
         k += 1
 
         if verbose: print(f'x = {x1.T}, g = {g1.T}')
