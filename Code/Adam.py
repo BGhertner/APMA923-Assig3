@@ -1,5 +1,5 @@
 """
-Conjugate Gradient - Samara Chaudhari Oct 2023
+Conjugate Gradient - Samara Chaudhari/Piyush Agarwal Oct 2023
 """
 
 import numpy as np
