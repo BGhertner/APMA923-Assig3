@@ -122,7 +122,7 @@ def BFGS(x, f=None, g=None, H=None,
     #Stop if ||grad(xk)|| or ||xk-1 - xk|| < stopping tolerance (eps)
     while (sla.norm(x1 - x.reshape(-1,1), 2) < Xmax \
            and k < kmax \
-           and np.min([sla.norm(g1,2), sla.norm(x0 - x1, 2)]) > eps) \
+           and sla.norm(g1,2) > eps) \
            or k < 2: #Run for at least two iterations.
         
         #Numbered steps following algorithm 4.1 p.25 on notes
