@@ -1,5 +1,5 @@
 """
-AdaM - Samara Chaudhury Oct 2023
+Conjugate Gradient - Samara Chaudhari Oct 2023
 """
 
 import numpy as np
@@ -9,7 +9,7 @@ def AdaM(x, f=None, g=None, get_step=None, eps=1e-4, gamma1=0.9, gamma2=0.999,
         Xmax=10, kmax=100, verbose=False, gmethod=0, h=None):
     
     """
-    AdaM - Piyush Agarwal Oct 2023
+    AdaM - Samara Chaudhari/Piyush Agarwal Oct 2023
 
     Inputs:
 
